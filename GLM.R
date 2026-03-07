@@ -1,4 +1,4 @@
-# 1. Create dataset
+#  Create dataset
 seen <- c(rep(0, 30), rep(1, 19))  
 
 W <- c(126,118,61,69,57,78,114,81,73,93,116,156,90,120,99,
@@ -16,14 +16,15 @@ CW <- c(64,54,44,32,42,53,41,47,33,45,49,45,48,49,44,
 # Combine into a data frame
 dataframe <- data.frame(seen, W, C, CW)
 
-# 2. Logistic regression
-model <- glm(seen ~ W + C + CW, data = dataframe, family = binomial(link = "logit"))
-summary(model)
 
-# 3. Predicted probabilities
-yhat <- fitted(model)
+# 1. Logistic regression with Logit link
+logit <- glm(seen ~ W + C + CW, data = dataframe, family = binomial(link = "logit"))
+summary(logit)
 
-# 4. GOF Test
+# Predicted probabilities
+yhatlogit <- fitted(logit)
+
+# GOF Test
 
 hosmerlem = function(y, yhat, g = 10){
   
@@ -41,6 +42,100 @@ hosmerlem = function(y, yhat, g = 10){
   return(list(chisq = chisq, p.value = P))
 }
 
-HL <- hosmerlem(y = dataframe$seen, yhat = yhat, g = 10)
+HL <- hosmerlem(y = dataframe$seen, yhat = yhatlogit, g = 10)
 
 data.frame(Chisq = HL$chisq, pvalue = HL$p.value)
+
+##### 2.  Logistic regression with Probit link #######
+probit <- glm(seen ~ W + C + CW, data = dataframe, family = binomial(link = "probit"))
+summary(probit)
+
+yhatprobit <- fitted(probit)
+
+hosmerlem = function(y, yhat, g = 10){
+  
+  cutyhat = cut(yhat,
+                breaks = quantile(yhat, probs = seq(0,1,1/g)),
+                include.lowest = TRUE)
+  
+  obs = xtabs(cbind(1 - y, y) ~ cutyhat)
+  expect = xtabs(cbind(1 - yhat, yhat) ~ cutyhat)
+  
+  chisq = sum((obs - expect)^2 / expect)
+  
+  P = 1 - pchisq(chisq, g - 2)
+  
+  return(list(chisq = chisq, p.value = P))
+}
+
+HL <- hosmerlem(y = dataframe$seen, yhat = yhatprobit, g = 10)
+data.frame(Chisq = HL$chisq, pvalue = HL$p.value)
+
+
+###### 3. Logistic regression with  Complementary Log Log link #####
+cloglog <- glm(seen ~ W + C + CW, data = dataframe, family = binomial(link = "cloglog"))
+summary(cloglog)
+
+yhatcloglog <- fitted(cloglog)
+
+hosmerlem = function(y, yhat, g = 10){
+  
+  cutyhat = cut(yhat,
+                breaks = quantile(yhat, probs = seq(0,1,1/g)),
+                include.lowest = TRUE)
+  
+  obs = xtabs(cbind(1 - y, y) ~ cutyhat)
+  expect = xtabs(cbind(1 - yhat, yhat) ~ cutyhat)
+  
+  chisq = sum((obs - expect)^2 / expect)
+  
+  P = 1 - pchisq(chisq, g - 2)
+  
+  return(list(chisq = chisq, p.value = P))
+}
+
+HL <- hosmerlem(y = dataframe$seen, yhat = yhatcloglog, g = 10)
+data.frame(Chisq = HL$chisq, pvalue = HL$p.value)
+
+#### 4. Logistic regression with Log-Log link ######
+loglogf <- function()
+{
+  ## link log(-log(mu))=eta (eta is the linear predictor)
+  linkfun <- function(mu) log(-log(mu))
+  ## inverse link mu=exp(-exp(eta))
+  linkinv <- function(eta) exp(-exp(eta))
+  ## derivative of invlink wrt eta
+  mu.eta <- function(eta) -exp(-exp(eta))*exp(eta)
+  valideta <- function(eta) TRUE
+  link <- "logloga"
+  structure(list(linkfun = linkfun, linkinv = linkinv,
+                 mu.eta = mu.eta, valideta = valideta, name = link),
+            class = "link-glm")
+}
+loglogv <- loglogf()
+loglogv$linkfun(loglogv$linkinv(27)) ## check invertibility
+library("numDeriv")
+all.equal(grad(loglogv$linkinv,2),loglogv$mu.eta(2)) ## check derivative
+
+loglog <- glm(seen ~ W + C + CW, data = dataframe ,family=binomial(link=loglogv))
+summary(loglog)
+### 5. Comparing table 
+HL_results <- data.frame(
+  model = c("logit", "probit", "cloglog", "loglog"),
+  Chisq = c(
+    hosmerlem(dataframe$seen, fitted(logit))$chisq,
+    hosmerlem(dataframe$seen, fitted(probit))$chisq,
+    hosmerlem(dataframe$seen, fitted(cloglog))$chisq,
+    hosmerlem(dataframe$seen, fitted(loglog))$chisq
+  ),
+  pvalue = c(
+    hosmerlem(dataframe$seen, fitted(logit))$p.value,
+    hosmerlem(dataframe$seen, fitted(probit))$p.value,
+    hosmerlem(dataframe$seen, fitted(cloglog))$p.value,
+    hosmerlem(dataframe$seen, fitted(loglog))$p.value
+  )
+)
+HL_results
+
+### 6. Compare AIC 
+AIC(logit, probit, cloglog, loglog)
