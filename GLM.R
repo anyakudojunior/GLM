@@ -138,4 +138,44 @@ HL_results <- data.frame(
 HL_results
 
 ### 6. Compare AIC 
-AIC(logit, probit, cloglog, loglog)
+models <- list(logit = logit,
+               probit = probit,
+               cloglog = cloglog,
+               loglog = loglog)
+aic_values <- sapply(models, AIC)
+delta_aic <- aic_values - min(aic_values)  # difference from best AIC
+akaike_weights <- exp(-0.5 * delta_aic) / sum(exp(-0.5 * delta_aic))
+
+# Combine into a table, AIC, delta AIC, Aikake Weights
+aic_table <- data.frame(
+  Model = names(models),
+  AIC = round(aic_values, 2),
+  Delta_AIC = round(delta_aic, 2),
+  Akaike_Weight = round(akaike_weights, 3)
+)
+print(aic_table)
+
+##### 7. Residual plots 
+# Deviance residuals
+par(mfrow = c(2, 2))  
+for (name in names(models)) {
+  mod <- models[[name]]
+  res_dev <- residuals(mod, type = "deviance")
+  plot(fitted(mod), res_dev,
+       main = paste(name, "- Deviance Residuals"),
+       xlab = "Fitted values", ylab = "Deviance Residuals")
+  abline(h = 0, col = "red", lty = 2)
+}
+par(mfrow = c(1, 1))  # reset layout
+
+# Pearson residuals
+par(mfrow = c(2, 2))
+for (name in names(models)) {
+  mod <- models[[name]]
+  res_pearson <- residuals(mod, type = "pearson")
+  plot(fitted(mod), res_pearson,
+       main = paste(name, "- Pearson Residuals"),
+       xlab = "Fitted values", ylab = "Pearson Residuals")
+  abline(h = 0, col = "blue", lty = 2)
+}
+par(mfrow = c(1, 1))
