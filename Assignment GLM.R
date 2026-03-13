@@ -114,6 +114,13 @@ cbind(pearson_X2, df_res, p_pearson)
 # Nonetheless, based on the Likelihood Ratio test, we can conclude that the data provides 
 # no evidence that Stroop test performance predicts inattentional blindness.
 
+# Step 5: Using the Hosmer-Lemeshow Test for Non-Repeated Observations
+p_hat = fitted(m_cloglog)
+install.packages("ResourceSelection")
+library(ResourceSelection)
+hoslem.test(df$seen, p_hat, g = 5)
+# The large p-value of the Hosmer-Lemeshow Test suggest that there is no evidence against an adequate model fit.
+
 
 # DHARMa Residuals
 # Instead of using classical residuals (as in Pearson, Deviance), the DHARMa package:
@@ -134,6 +141,7 @@ plot(sim_residuals)
 
 # According to the Kolmogorov-Smirnov Test for Uniformity, the DHARMa residuals do no provide
 # evidence against the expected uniform distribution, suggesting the model specification is adequate.
+
 
 
 
