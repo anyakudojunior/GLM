@@ -3,8 +3,9 @@
 install.packages("rbibutils", type = "binary")
 install.packages("Rdpack", type = "binary")
 install.packages("DHARMa", type = "binary")
+install.packages("ResourceSelection")
 
-<<<<<<< HEAD
+
 # Load package
 library(DHARMa)
 
@@ -25,28 +26,6 @@ CW <- c(64,54,44,32,42,53,41,47,33,45,49,45,48,49,44,
 
 # Combine into a data frame
 df <- data.frame(seen, W, C, CW)
-=======
-#  Create dataset
-seen = c(rep(0, 30), rep(1, 19))  
->>>>>>> 7a06a52a76947c760e65109c1bbaf683356a8d51
-
-W = c(126,118,61,69,57,78,114,81,73,93,116,156,90,120,99,
-       113,103,123,86,99,102,120,128,100,95,80,98,111,101,102,
-       100,112,82,72,72,89,108,88,116,100,99,93,100,110,100,106,115,120,97)
-
-C = c(86,76,66,48,59,64,61,85,57,50,92,70,66,73,68,
-       110,78,61,65,77,77,74,100,89,61,55,92,90,85,78,
-       66,78,84,63,65,71,46,70,83,69,70,63,93,76,83,71,112,87,82)
-
-CW = c(64,54,44,32,42,53,41,47,33,45,49,45,48,49,44,
-        47,52,28,42,51,54,53,56,56,37,36,51,52,45,51,
-        48,55,37,46,47,49,29,49,67,39,43,36,62,56,36,49,66,54,41)
-
-# Combine into a data frame
-df = data.frame(seen, W, C, CW)
-
-
-
 
 # 1. Understanding the Dataset
 # A pair of researchers studied a psychological phenomenon called Inattentional Blindness (IB)
@@ -72,14 +51,17 @@ df = data.frame(seen, W, C, CW)
 
 # 2. Setting up a Binomial GLM (since Yi ~ Bernoulli)
 
-# Step 1: We fit Binomial GLMs with different Link functions
+# Fit Binomial GLMs with different link functions
+# (response is binary → Bernoulli distribution)
+
 # Logit Link
 m_logit = glm(seen ~ W + C + CW, data=df, family = binomial(link="logit"))
 # Probit Link
 m_probit = glm(seen ~ W + C + CW, data=df, family = binomial(link="probit"))
 # Complementary loglog Link
 m_cloglog = glm(seen ~ W + C + CW, data=df, family = binomial(link="cloglog"))
-# Log-Log Link
+
+# Log-Log Link (# We define custom log-log link function)
 logloga = function()
 {
   linkfun = function(mu) log(-log(mu))
@@ -91,16 +73,22 @@ logloga = function()
                  mu.eta = mu.eta, valideta = valideta, name = link), class = "link-glm")
 }
 loglogv <- logloga()
-loglogv$linkfun(loglogv$linkinv(27)) # Checking Invertibility
+
+# Check that link and inverse link are consistent
+loglogv$linkfun(loglogv$linkinv(27)) 
+
+# Check derivative using numerical differentiation
 library("numDeriv")
-all.equal(grad(loglogv$linkinv,2),loglogv$mu.eta(2)) # Checking Derivative
+all.equal(grad(loglogv$linkinv,2),loglogv$mu.eta(2)) 
+
 loglog = glm(seen ~ W + C + CW, data = df ,family=binomial(link=loglogv))
 
-# Summary Output
+# Display summaries to inspect coefficient significance
 summary(m_logit)
 summary(m_probit)
 summary(m_cloglog)
 summary(loglog)
+
 # Across all three link functions, the coefficients appear to be statistically insignificant.
 # We can attempt to verify this by using a Likelihood-Ratio Test, comparing an intercept-only
 # model with the full model
@@ -114,39 +102,37 @@ AIC(m_logit, m_probit, m_cloglog, loglog)
 
 
 # Step 3: Testing the Statistical Significance of Stroop Predictors (Likelihood Ratio Test)
-# For the Complementary Log-Log Link:
+
+# Complementary Log-Log Link:
 m0_cloglog = glm(seen ~ 1, data=df, family=binomial(link = "cloglog"))
 m1_cloglog = glm(seen ~ W + C + CW, data=df, family=binomial(link = "cloglog"))
 anova(m0_cloglog, m1_cloglog, test="Chisq")
-# Given the enormous p-value of 0.9165, we fail to reject H0, thus the Stroop variables
-# do not improve the model beyond an intercept-only model.
 
-# For the Logit Link
+# Logit Link
 m0_logit = glm(seen ~ 1, data=df, family=binomial(link = "logit"))
 m1_logit = glm(seen ~ W + C + CW, data=df, family=binomial(link = "logit"))
 anova(m0_logit, m1_logit, test="Chisq")
 
-# For the Probit Link
+# Probit Link
 m0_probit = glm(seen ~ 1, data=df, family=binomial(link = "probit"))
 m1_probit = glm(seen ~ W + C + CW, data=df, family=binomial(link = "probit"))
 anova(m0_probit, m1_probit, test="Chisq")
 
-# For the Log-Log Link
+# Log-Log Link
 m0_loglog = glm(seen ~ 1, data=df, family=binomial(link = loglogv))
 m1_loglog = glm(seen ~ W + C + CW, data=df, family=binomial(link = loglogv))
-<<<<<<< HEAD
 anova(m0_loglog, m1_loglog, test="Chisq")
 
+# For all link functions, large p-values are obtained.
+# Therefore, we fail to reject H0.
+
+# This indicates that adding Stroop test scores does not significantly
+# improve model fit. Hence, the data provide no statistical evidence
+# that Stroop performance affects the probability of seeing the gorilla.
+
 
 # Step 4: Using the Hosmer-Lemeshow Test for Non-Repeated Observations
 
-=======
-anova(m0_probit, m1_probit, test="Chisq")
-
-
-# Step 4: Using the Hosmer-Lemeshow Test for Non-Repeated Observations
-install.packages("ResourceSelection")
->>>>>>> 7a06a52a76947c760e65109c1bbaf683356a8d51
 # Complementary Log-Log Link
 p_hat = fitted(m_cloglog)
 library(ResourceSelection)
@@ -166,12 +152,11 @@ p_hat = fitted(loglog)
 hoslem.test(df$seen, p_hat, g = 5)
 
 
-# As a conclusion, amongst the four considered link functions, the complementary log-log model
-# presented the lowest AIC and was thus retained as the final model. We then assessed 
-# goodness-of-fit of all four models using the Hosmer-Lemeshow test, with none of them indicating significant 
-# evidence against adequate model fit.
-# Nonetheless, based on the Likelihood Ratio test, we can conclude that the data provides 
-# no evidence that Stroop test performance predicts inattentional blindness.
+# For all link functions, the Hosmer–Lemeshow test produces large p-values.
+# Therefore, we do not reject the null hypothesis of adequate model fit.
+
+# This suggests that there is no evidence of lack of fit for any of the
+# considered Binomial GLMs.
 
 # Residuals
 # 1) DHARMa Residuals
@@ -181,10 +166,6 @@ hoslem.test(df$seen, p_hat, g = 5)
 # 3. Produces Uniform Residuals
 # If the model is correct, the Residuals should follow Uniform(0,1)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 7a06a52a76947c760e65109c1bbaf683356a8d51
 # Complementary Log-Log Link
 sim_residuals = simulateResiduals(m_cloglog)
 # Uniformity Test: Verifies whether residuals are ~Uni(0,1)
@@ -304,8 +285,6 @@ legend("bottomright",
        legend=c("Logistic","Probit","Complementary log-log","Log-log"),
        col=c("green","red","blue","black"),
        lwd=2)
-<<<<<<< HEAD
-=======
 
 
 
@@ -316,7 +295,8 @@ legend("bottomright",
 
 
 
->>>>>>> 7a06a52a76947c760e65109c1bbaf683356a8d51
+
+
 
 
 
