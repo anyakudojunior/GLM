@@ -4,7 +4,6 @@ install.packages("rbibutils", type = "binary")
 install.packages("Rdpack", type = "binary")
 install.packages("DHARMa", type = "binary")
 
-<<<<<<< HEAD
 # Load package
 library(DHARMa)
 
@@ -25,10 +24,9 @@ CW <- c(64,54,44,32,42,53,41,47,33,45,49,45,48,49,44,
 
 # Combine into a data frame
 df <- data.frame(seen, W, C, CW)
-=======
+
 #  Create dataset
 seen = c(rep(0, 30), rep(1, 19))  
->>>>>>> 7a06a52a76947c760e65109c1bbaf683356a8d51
 
 W = c(126,118,61,69,57,78,114,81,73,93,116,156,90,120,99,
        113,103,123,86,99,102,120,128,100,95,80,98,111,101,102,
@@ -44,9 +42,6 @@ CW = c(64,54,44,32,42,53,41,47,33,45,49,45,48,49,44,
 
 # Combine into a data frame
 df = data.frame(seen, W, C, CW)
-
-
-
 
 # 1. Understanding the Dataset
 # A pair of researchers studied a psychological phenomenon called Inattentional Blindness (IB)
@@ -134,19 +129,16 @@ anova(m0_probit, m1_probit, test="Chisq")
 # For the Log-Log Link
 m0_loglog = glm(seen ~ 1, data=df, family=binomial(link = loglogv))
 m1_loglog = glm(seen ~ W + C + CW, data=df, family=binomial(link = loglogv))
-<<<<<<< HEAD
 anova(m0_loglog, m1_loglog, test="Chisq")
 
 
 # Step 4: Using the Hosmer-Lemeshow Test for Non-Repeated Observations
 
-=======
 anova(m0_probit, m1_probit, test="Chisq")
 
 
 # Step 4: Using the Hosmer-Lemeshow Test for Non-Repeated Observations
 install.packages("ResourceSelection")
->>>>>>> 7a06a52a76947c760e65109c1bbaf683356a8d51
 # Complementary Log-Log Link
 p_hat = fitted(m_cloglog)
 library(ResourceSelection)
@@ -181,10 +173,6 @@ hoslem.test(df$seen, p_hat, g = 5)
 # 3. Produces Uniform Residuals
 # If the model is correct, the Residuals should follow Uniform(0,1)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 7a06a52a76947c760e65109c1bbaf683356a8d51
 # Complementary Log-Log Link
 sim_residuals = simulateResiduals(m_cloglog)
 # Uniformity Test: Verifies whether residuals are ~Uni(0,1)
@@ -304,19 +292,7 @@ legend("bottomright",
        legend=c("Logistic","Probit","Complementary log-log","Log-log"),
        col=c("green","red","blue","black"),
        lwd=2)
-<<<<<<< HEAD
-=======
 
-
-
-
-
-
-
-
-
-
->>>>>>> 7a06a52a76947c760e65109c1bbaf683356a8d51
 
 
 
