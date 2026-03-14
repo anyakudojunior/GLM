@@ -100,7 +100,22 @@ summary(loglog)
 AIC(m_logit, m_probit, m_cloglog, loglog)
 # All four link functions provide almost identical fit.
 # The complementary log-log model has the smallest AIC but the difference is negligible.
+models <- list(logit = m_logit,
+               probit = m_probit,
+               cloglog = m_cloglog,
+               loglog = loglog)
+aic_values <- sapply(models, AIC)
+delta_aic <- aic_values - min(aic_values)  # difference from best AIC
+akaike_weights <- exp(-0.5 * delta_aic) / sum(exp(-0.5 * delta_aic))
 
+# Combine into a table, AIC, delta AIC, Aikake Weights
+aic_table <- data.frame(
+  Model = names(models),
+  AIC = round(aic_values, 2),
+  Delta_AIC = round(delta_aic, 2),
+  Akaike_Weight = round(akaike_weights, 3)
+)
+print(aic_table)
 
 # 4. Testing the Statistical Significance of Stroop Predictors (Likelihood Ratio Test):
 
