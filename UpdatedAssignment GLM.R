@@ -211,61 +211,6 @@ testDispersion(sim_residuals)
 plot(sim_residuals)
 
 
-
-# 2) Pearson Residuals
-# Pearson residuals measure how large the error is relative to the model's variance assumption.
-
-# Complementary Log-Log Link
-pearson_res = residuals(m_cloglog, type = "pearson")
-summary(pearson_res)
-plot(pearson_res)
-abline(h=0)
-# Logit Link
-pearson_res = residuals(m_logit, type = "pearson")
-summary(pearson_res)
-plot(pearson_res)
-abline(h=0)
-# Probit Link
-pearson_res = residuals(m_probit, type = "pearson")
-summary(pearson_res)
-plot(pearson_res)
-abline(h=0)
-# Log-Log Link
-pearson_res = residuals(loglog, type = "pearson")
-summary(pearson_res)
-plot(pearson_res)
-abline(h=0)
-# Pearson residuals are roughly centred around zero and mostly lie within ±2,
-# indicating no severe outliers or violation.
-
-# 3) Deviance Residuals
-# Deviance residuals measure how much each observation contributes to the model deviance, 
-# and are thus derived from the likelihood contribution of each observation.
-
-# Complementary Log-Log Link
-deviance_res = residuals(m_cloglog, type = "deviance")
-summary(deviance_res)
-plot(deviance_res)
-abline(h=0)
-# Logit Link
-deviance_res = residuals(m_logit, type = "deviance")
-summary(deviance_res)
-plot(deviance_res)
-abline(h=0)
-# Probit Link
-deviance_res = residuals(m_probit, type = "deviance")
-summary(deviance_res)
-plot(deviance_res)
-abline(h=0)
-# Log-Log Link
-deviance_res = residuals(loglog, type = "deviance")
-summary(deviance_res)
-plot(deviance_res)
-abline(h=0)
-# Deviance residuals show a similar pattern to Pearson residuals,
-# supporting the overall adequacy of the fitted Binomial GLMs.
-
-
 # Plotting CW versus Predicted Probability of seeing the Gorilla
 CW_seq = seq(min(df$CW), max(df$CW), length=100)
 
